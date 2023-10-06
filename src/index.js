@@ -5,6 +5,7 @@ const {
   handleCiOption,
   handleExtends,
   handleTagFormat,
+  handleSimulationRun
 } = require('./handleOptions');
 const setUpJob = require('./setUpJob.task');
 const installSpecifyingVersionSemantic = require('./installSpecifyingVersionSemantic.task');
@@ -26,6 +27,7 @@ const release = async () => {
   await preInstall(core.getInput(inputs.extra_plugins));
   await preInstall(core.getInput(inputs.extends));
 
+  await handleSimulationRun(); // run before running semantic-release to modify environment, if enabled 
   const semanticRelease = await import('semantic-release');
   const result = await semanticRelease.default({
     ...handleBranchesOption(),

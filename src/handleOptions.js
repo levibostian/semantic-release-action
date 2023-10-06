@@ -116,3 +116,26 @@ exports.handleTagFormat = () => {
     return {};
   }
 };
+
+exports.handleSimulationRun = async() => {
+  const dryRunOptions = this.handleDryRunOption();
+  const isInDryRunMode = dryRunOptions != {} && dryRunOptions.dryRun == true;
+  if (!isInDryRunMode) {
+    core.debug(`Not in dry-run mode, skipping simulation run`);
+    return;
+  }
+
+  const simulationBranchName = core.getInput(inputs.simulate_push_branch);
+  core.debug(`simulate_push_branch input: ${simulationBranchName}`);
+
+  if (simulationBranchName === '') return;
+
+  // Trick semantic-release into thinking that it's running after a push event, like you would do for a real deployment. 
+  // This is required because by default, semantic-release will not run on a pull-request event, even in dry-run mode. 
+  process.env.GITHUB_EVENT_NAME = "push"
+
+  // Trick semantic-release into thinking that the github action was triggered from pushing to the current branch. 
+  // This is required because by default, semantic-release refers to the GITHUB_REF environment variable to determine the branch to try and release from. When, really, we 
+  // may have checked out a different branch before running this action.
+  process.env.GITHUB_REF = `refs/heads/${simulationBranchName}`
+}
