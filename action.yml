@@ -20,6 +20,9 @@ inputs:
   dry_run:
     required: false
     description: 'Whether to run semantic release in `dry-run` mode. It will override the dryRun attribute in your configuration file'
+  simulate_push_branch:
+    required: false
+    description: 'Tricks semantic-release into thinking the CI is running on a push event on this branch. Allows you to test semantic-release on a branch without having to push to it making it ideal for a pull request. Must enable dry_run to use this.'
   ci:
     required: false
     description: 'Whether to run semantic release with CI support (default: true). It will override the ci attribute in your configuration file'

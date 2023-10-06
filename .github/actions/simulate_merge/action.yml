@@ -1,0 +1,44 @@
+name: 'Simulate Merge'
+description: 'simulate what would happen if you squad merged'
+
+outputs:
+  branch_name:
+    description: 'The name of the branch that we are on after running action'
+    value: ${{ steps.branch-name.outputs.base_ref_branch }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get branch name
+      id: branch-name
+      uses: tj-actions/branch-names@v7  
+    
+    # Squash all commits of the current branch into 1 commit. Each command below is executed as 1 step in this job 
+    # to act as comments explaining each step of the process. 
+    # Help with how to squash and merge a PR: https://stackoverflow.com/a/5201642
+    - name: Fetch all branches so we can reference origin/${{ steps.branch-name.outputs.base_ref_branch }} branch
+      run: git fetch --depth=1
+      shell: bash
+    - name: Configure git with name and email or git will throw error when trying to make a commit 
+      run: git config user.name "GitHub" && git config user.email "noreply@github.com"
+      shell: bash
+    - name: Creating new branch to make the squashed commit on. Must be checked out to a branch or commit will not succeed. 
+      run: git checkout -b "temp-squash-commits-branch"
+      shell: bash
+    - name: Squash all commits in PR into 1 commit. Using the title of this PR as the commit message. 
+      run: git reset --soft origin/${{ steps.branch-name.outputs.base_ref_branch }} && git commit -m "${{ github.event.pull_request.title }}"
+      shell: bash
+    - name: Run git log for debugging purposes to see if 1 commit was created as we expected 
+      run: git log 
+      shell: bash
+    
+    # Merge the new squashed commit into the main branch to simulate merging this PR into main branch 
+    - name: Pull the ${{ steps.branch-name.outputs.base_ref_branch }} branch locally so we can use it 
+      run: git checkout ${{ steps.branch-name.outputs.base_ref_branch }} && git pull
+      shell: bash
+    - name: Merge the squashed commit that we made into the local ${{ steps.branch-name.outputs.base_ref_branch }} branch 
+      run: git merge "temp-squash-commits-branch"
+      shell: bash
+    - name: Run git log for debugging purposes to see if the merge shows 1 new squashed commit got merged successfully 
+      run: git log 
+      shell: bash      
